@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Street View Quick Keys",
+  "version": "1.0.0",
+  "description": "Copy quick-key prompts while exploring Google Street View.",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["https://*.google.com/maps*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["quick_keys.md", "customize.html", "customize.css", "customize.js"],
+      "matches": ["https://*.google.com/*"]
+    }
+  ]
+}

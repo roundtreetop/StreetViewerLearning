@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Customize Street View Quick Keys</title>
+    <link rel="stylesheet" href="customize.css">
+    <script src="customize.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <h1>Customize quick keys</h1>
+      <p>Edit prompts below using one <code>label: prompt</code> entry per line. Changes are saved for this browser and update open Street View tabs.</p>
+      <label for="quick-keys">Quick keys</label>
+      <textarea id="quick-keys" spellcheck="false" aria-describedby="format-help"></textarea>
+      <p id="format-help" class="hint">Labels appear as menu buttons. Put the prompt after the first colon.</p>
+      <div class="actions">
+        <button id="save" type="button">Save changes</button>
+        <button id="reset" type="button" class="secondary">Restore quick_keys.md defaults</button>
+        <span id="status" role="status" aria-live="polite"></span>
+      </div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,98 @@
+#street-view-quick-keys {
+  --svq-bg: #202124;
+  --svq-fg: #f1f3f4;
+  all: initial;
+  position: fixed;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2147483647;
+  font-family: Arial, sans-serif;
+}
+
+#street-view-quick-keys[hidden] {
+  display: none !important;
+}
+
+#street-view-quick-keys .svq-trigger,
+#street-view-quick-keys .svq-option {
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--svq-fg);
+  background: var(--svq-bg);
+  font: 600 14px/1 Arial, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+  touch-action: none;
+}
+
+#street-view-quick-keys .svq-trigger {
+  display: block;
+  width: 58px;
+  height: 58px;
+  border: 1px solid rgba(255, 215, 128, 0.45);
+  border-radius: 18px 8px 18px 8px;
+  color: #f4c95d;
+  background: linear-gradient(145deg, #29251b, #171717 72%);
+  font: italic 900 23px/1 Georgia, "Times New Roman", serif;
+  letter-spacing: -3px;
+  text-indent: -3px;
+  text-shadow: 0 1px 0 #fff0b8, 0 2px 8px rgba(244, 201, 93, 0.65);
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.48), inset 0 0 0 2px rgba(244, 201, 93, 0.08);
+  cursor: grab;
+  user-select: none;
+}
+
+#street-view-quick-keys .svq-trigger:active {
+  cursor: grabbing;
+}
+
+#street-view-quick-keys .svq-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  min-width: 90px;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--svq-bg);
+  box-shadow: 0 3px 16px rgba(0, 0, 0, 0.4);
+}
+
+#street-view-quick-keys.svq-open .svq-menu,
+#street-view-quick-keys.svq-hover .svq-menu {
+  display: grid;
+  gap: 5px;
+}
+
+#street-view-quick-keys .svq-option {
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  text-align: left;
+}
+
+#street-view-quick-keys .svq-option:hover,
+#street-view-quick-keys .svq-trigger:hover {
+  background: #3c4043;
+}
+
+#street-view-quick-keys .svq-trigger:hover {
+  color: #ffe08a;
+  background: linear-gradient(145deg, #39311e, #202020 72%);
+}
+
+#street-view-quick-keys .svq-option.svq-copied {
+  background: #137333;
+}
+
+#street-view-quick-keys .svq-status {
+  position: absolute;
+  right: 0;
+  bottom: 54px;
+  color: white;
+  font: 12px/1.4 Arial, sans-serif;
+  text-align: right;
+  text-shadow: 0 1px 3px black;
+  white-space: nowrap;
+}
