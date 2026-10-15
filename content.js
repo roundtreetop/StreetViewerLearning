@@ -6,6 +6,8 @@
   const quickKeysStorageKey = "quickKeysMarkdown";
   let host;
   let observer;
+  let sceneResizeObserver;
+  let observedScene;
   let menu;
   let status;
 
@@ -33,6 +35,70 @@
     return [...document.querySelectorAll(
       "button[aria-label*='Street View' i],[role='button'][aria-label*='Street View' i]",
     )].some((button) => /exit street view|close street view/i.test(button.getAttribute("aria-label")));
+  }
+
+  function getStreetViewBounds() {
+    const scenes = document.querySelectorAll(".widget-scene, #scene");
+    for (const scene of scenes) {
+      const bounds = scene.getBoundingClientRect();
+      if (bounds.width <= 0 || bounds.height <= 0) continue;
+
+      const left = Math.max(0, bounds.left);
+      const top = Math.max(0, bounds.top);
+      const right = Math.min(window.innerWidth, bounds.right);
+      const bottom = Math.min(window.innerHeight, bounds.bottom);
+      if (right > left && bottom > top) return { left, top, right, bottom };
+    }
+
+    return { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight };
+  }
+
+  function observeStreetViewScene() {
+    if (!sceneResizeObserver) return;
+    const scene = document.querySelector(".widget-scene") || document.querySelector("#scene");
+    if (scene === observedScene) return;
+    if (observedScene) sceneResizeObserver.unobserve(observedScene);
+    observedScene = scene;
+    if (scene) sceneResizeObserver.observe(scene);
+  }
+
+  function constrainHostPosition(left, top) {
+    const bounds = getStreetViewBounds();
+    const margin = 8;
+    const width = host.querySelector(".svq-trigger").offsetWidth;
+    const height = host.querySelector(".svq-trigger").offsetHeight;
+    const minLeft = bounds.left + margin;
+    const maxLeft = bounds.right - width - margin;
+    const minTop = bounds.top + margin;
+    const maxTop = bounds.bottom - height - margin;
+
+    return {
+      left: maxLeft < minLeft
+        ? bounds.left + Math.max(0, (bounds.right - bounds.left - width) / 2)
+        : Math.max(minLeft, Math.min(maxLeft, left)),
+      top: maxTop < minTop
+        ? bounds.top + Math.max(0, (bounds.bottom - bounds.top - height) / 2)
+        : Math.max(minTop, Math.min(maxTop, top)),
+    };
+  }
+
+  function positionHost(left, top) {
+    const position = constrainHostPosition(left, top);
+    host.style.left = `${position.left}px`;
+    host.style.top = `${position.top}px`;
+    host.style.right = "auto";
+    host.style.bottom = "auto";
+    host.style.transform = "none";
+    return position;
+  }
+
+  function saveHostPosition() {
+    const bounds = host.getBoundingClientRect();
+    try {
+      localStorage.setItem(positionKey, JSON.stringify({ left: bounds.left, top: bounds.top }));
+    } catch (error) {
+      console.error("Street View Quick Keys: could not save its position.", error);
+    }
   }
 
   async function copyPrompt(prompt, button, status) {
@@ -151,27 +217,13 @@
       if (!drag.moved && Math.hypot(deltaX, deltaY) < 4) return;
 
       drag.moved = true;
-      host.style.left = `${Math.max(0, Math.min(window.innerWidth - host.offsetWidth, drag.left + deltaX))}px`;
-      host.style.top = `${Math.max(0, Math.min(window.innerHeight - host.offsetHeight, drag.top + deltaY))}px`;
-      host.style.right = "auto";
-      host.style.bottom = "auto";
-      host.style.transform = "none";
+      positionHost(drag.left + deltaX, drag.top + deltaY);
     });
     trigger.addEventListener("pointerup", (event) => {
       if (!drag || drag.pointerId !== event.pointerId) return;
       if (drag.moved) {
         ignoreNextClick = true;
-        try {
-          localStorage.setItem(
-            positionKey,
-            JSON.stringify({
-              left: host.getBoundingClientRect().left,
-              top: host.getBoundingClientRect().top,
-            }),
-          );
-        } catch (error) {
-          console.error("Street View Quick Keys: could not save its position.", error);
-        }
+        saveHostPosition();
       }
       drag = undefined;
     });
@@ -198,25 +250,48 @@
       if (savedPosition) {
         const position = JSON.parse(savedPosition);
         if (Number.isFinite(position.left) && Number.isFinite(position.top)) {
-          host.style.left = `${Math.max(0, Math.min(window.innerWidth - host.offsetWidth, position.left))}px`;
-          host.style.top = `${Math.max(0, Math.min(window.innerHeight - host.offsetHeight, position.top))}px`;
-          host.style.right = "auto";
-          host.style.bottom = "auto";
-          host.style.transform = "none";
+          positionHost(position.left, position.top);
+        } else {
+          positionHostFromDefault();
         }
+      } else {
+        positionHostFromDefault();
       }
     } catch (error) {
       console.error("Street View Quick Keys: could not restore its position.", error);
+      positionHostFromDefault();
     }
     updateVisibility();
   }
 
+  function positionHostFromDefault() {
+    const bounds = getStreetViewBounds();
+    const trigger = host.querySelector(".svq-trigger");
+    positionHost(
+      bounds.right - 24 - trigger.offsetWidth,
+      bounds.top + (bounds.bottom - bounds.top - trigger.offsetHeight) / 2,
+    );
+  }
+
   function updateVisibility() {
-    if (host) host.hidden = !isStreetView();
+    if (!host) return;
+    observeStreetViewScene();
+    const streetView = isStreetView();
+    host.hidden = !streetView;
+    if (streetView) {
+      const position = positionHost(host.getBoundingClientRect().left, host.getBoundingClientRect().top);
+      if (position.left !== host.getBoundingClientRect().left || position.top !== host.getBoundingClientRect().top) {
+        saveHostPosition();
+      }
+    }
   }
 
   function observePage() {
     updateVisibility();
+    if (!sceneResizeObserver && "ResizeObserver" in window) {
+      sceneResizeObserver = new ResizeObserver(updateVisibility);
+      observeStreetViewScene();
+    }
     if (!observer && document.body) {
       let updateScheduled = false;
       observer = new MutationObserver(() => {
@@ -246,5 +321,6 @@
   observePage();
   window.addEventListener("popstate", updateVisibility);
   window.addEventListener("hashchange", updateVisibility);
+  window.addEventListener("resize", updateVisibility);
   window.setInterval(updateVisibility, 1000);
 })();
