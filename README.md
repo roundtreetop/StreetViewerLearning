@@ -1,7 +1,12 @@
 # Street View Quick Keys
 
 A Chrome/Edge Manifest V3 extension that displays a floating quick-key menu only while Google Maps is in Street View. The menu entries default to `quick_keys.md`; each line uses `label: prompt`. Clicking a label copies its prompt to the clipboard.
+
 When you invoke "Ask Gemini" or Google Lens Search, you may conveniently paste these prompts to the search box.
+Preset prompts ask about general Geoguessr clues (!GG), plant identification (!Vegetation), architectural features (!Architecture), and cultural elements (!Cultural). Of course, you may customize your own as you wish. 
+
+Let's explore the world. 
+
 ![alt text](image.png)
 
 
